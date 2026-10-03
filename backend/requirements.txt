@@ -1,5 +1,0 @@
-fastapi
-uvicorn[standard]
-networkx
-httpx
-pydantic

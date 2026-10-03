@@ -1,53 +1,59 @@
-# ChainSight
+# ChainSight — Team Alignment Questionnaire 🗳️
 
-**Supply chain risk mapping & disruption simulation** — HackYeah 2025, "Defence" open task.
+Before we write ANY code, everyone answers this. We have **~24 hours** — we can build
+ONE thing well, not five buzzwords badly. Edit this file or answer in the group chat.
 
-Corporations depend on supplier networks they can't see past tier 1. ChainSight maps the
-full supplier graph (tier 1→3), overlays live risk signals (sanctions, cyber incidents,
-geopolitics, weather), and simulates *"what if supplier X goes down"* — showing cascade
-effects and suggesting alternatives.
+**Judging reminder:** Idea 30% · Relation to Defence 20% · Usability 20% · Design 20% · Completeness 10%.
+Blockchain/AI/etc. earn **zero points** by themselves — only if they visibly solve the problem.
 
-## Why corporations need this
-- Visibility: most companies don't know their tier-2/3 suppliers
-- Early warning: risk signals mapped to *your* suppliers, not generic news
-- Resilience planning: simulate disruptions before they happen
-- Compliance: sanctions / ownership screening built in
+---
 
-## Architecture
+## 1. What are we building? (pick ONE)
 
-```
-frontend/   React + Vite — supplier graph & map visualization, simulation UI
-backend/    FastAPI — graph API, risk scoring, simulation engine
-data/       Sample supplier networks, sanctions lists, risk feeds
-docs/       Pitch deck, architecture notes
-```
+- [ ] **Supplier risk graph** — map tier 1→3 suppliers, risk overlay, disruption simulation
+- [ ] **SBOM / software supply chain scanner** — dependency alerts, typosquats
+- [ ] **Critical goods flow mapper** — chokepoints for fuel/medicine/food logistics
+- [ ] **Supplier verification / sanctions screening** — procurement trust checks
+- [ ] Other (write it): ____________
 
-## Core features (MVP)
-1. **Supplier graph** — import suppliers (CSV), visualize dependency network
-2. **Risk overlay** — score each node from external signals (news, sanctions lists)
-3. **Disruption simulation** — click a node, see the cascade, get alternatives
-4. **Risk dashboard** — top exposures, single points of failure
+## 2. Who is the user? (pick ONE, be specific)
 
-## Quick start
+- [ ] Procurement manager at a mid-size manufacturer
+- [ ] CISO / security team
+- [ ] Government / crisis-management agency
+- [ ] Other: ____________
 
-```bash
-# backend
-cd backend && pip install -r requirements.txt && uvicorn app.main:app --reload
+## 3. What is THE one demo moment?
+*The 30 seconds that makes the jury go "wow". One sentence:*
 
-# frontend
-cd frontend && npm install && npm run dev
-```
+> ____________
 
-## Team
-_(fill in — 5 members)_
+## 4. Tech votes
 
-| Role | Who |
-|------|-----|
-| Frontend — graph/map viz | |
-| Frontend — UI/design | |
-| Backend — API & graph model | |
-| AI/Data — risk scoring & ingestion | |
-| Pitch & demo | |
+| Question | Your answer |
+|----------|-------------|
+| Frontend (React / Vue / plain) | |
+| Backend (FastAPI / Node / none) | |
+| Do we need a database at all? | |
+| AI usage — where exactly? | |
+| **Blockchain — what concrete problem does it solve here?** (if no answer → we skip it) | |
 
-## License
-MIT
+## 5. What do YOU want to own?
+
+| Name | Role you want | Strongest skill |
+|------|---------------|-----------------|
+| | | |
+| | | |
+| | | |
+| | | |
+| | | |
+
+## 6. Scope guardrails — agree or object
+
+- One core feature working end-to-end > three half-features
+- Mock data is fine, demo flow is sacred
+- UI polish matters (Design = 20%)
+- Pitch deck (max 10 slides, PDF) is someone's JOB, not an afterthought
+- Feature freeze 3h before deadline
+
+**Deadline to answer: ASAP — then we lock scope and start.**
