@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RVCS — Volunteer Onboarding</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { margin:0; font-family:system-ui,sans-serif; background:#f0f2f5; display:flex; justify-content:center; padding:40px 16px; }
+  .card { background:#fff; border-radius:14px; box-shadow:0 4px 20px rgba(0,0,0,.1); padding:28px; width:380px; }
+  h1 { font-size:20px; margin:0 0 4px; } p { color:#555; font-size:14px; }
+  .bankid { width:100%; padding:14px; border:none; border-radius:8px; background:#193e4f; color:#fff; font-size:16px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .bankid:hover { background:#255a72; }
+  .step2 { display:none; }
+  label { font-size:13px; font-weight:600; display:block; margin:12px 0 4px; }
+  input, select { width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; font-size:14px; box-sizing:border-box; }
+  .submit { margin-top:18px; width:100%; padding:12px; border:none; border-radius:8px; background:#2da44e; color:#fff; font-size:15px; font-weight:600; cursor:pointer; }
+  .verified { background:#dafbe1; border:1px solid #2da44e; color:#116329; padding:10px; border-radius:8px; font-size:13px; margin-top:14px; }
+  .done { display:none; text-align:center; }
+  .done h2 { color:#116329; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="step1" id="step1">
+    <h1>🛰️ RVCS Volunteer Portal</h1>
+    <p>Register as a verified crisis volunteer. Your identity is confirmed via your bank — no fake accounts, no infiltration.</p>
+    <button class="bankid" onclick="mockBankId()">🏦 Log in with BankID</button>
+  </div>
+  <div class="step2" id="step2">
+    <h1>Asset Matrix</h1>
+    <div class="verified">✅ Identity verified via BankID (mock): <b id="vname"></b><br>KYC level: Bank-grade</div>
+    <label>Primary skill / asset</label>
+    <select id="skill">
+      <option value="medic">🩺 Medical training</option>
+      <option value="engineer">🔧 Engineer</option>
+      <option value="driver_4x4">🚙 Owns 4x4 vehicle</option>
+      <option value="drone_operator">🛸 Drone operator</option>
+    </select>
+    <label>Home sector</label>
+    <select id="sector">
+      <option value="A">Sector A — Main Square</option>
+      <option value="B">Sector B — West</option>
+      <option value="C">Sector C — North-East</option>
+    </select>
+    <label>Phone (GSM — for USSD fallback)</label>
+    <input id="phone" value="+48 601 234 567">
+    <button class="submit" onclick="submit()">Register in SSOT</button>
+  </div>
+  <div class="done" id="done">
+    <h2>✅ Registered</h2>
+    <p>You are now in the central SSOT as a verified volunteer.<br>
+    In a crisis you will be reached via <b>USSD/SMS</b> even if the internet is down.</p>
+    <p><a href="/phone" target="_blank">Open your phone simulator →</a></p>
+  </div>
+</div>
+<script>
+const NAMES = ['Katarzyna Zielińska','Tomasz Lewandowski','Iryna Bondarenko','Pavel Dvořák'];
+let name = '';
+function mockBankId() {
+  name = NAMES[Math.floor(Math.random()*NAMES.length)];
+  document.getElementById('vname').textContent = name;
+  document.getElementById('step1').style.display = 'none';
+  document.getElementById('step2').style.display = 'block';
+}
+async function submit() {
+  await fetch('/api/onboard', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      name,
+      skill: document.getElementById('skill').value,
+      sector: document.getElementById('sector').value,
+      phone: document.getElementById('phone').value,
+    })});
+  document.getElementById('step2').style.display = 'none';
+  document.getElementById('done').style.display = 'block';
+}
+</script>
+</body>
+</html>

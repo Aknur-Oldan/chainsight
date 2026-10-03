@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RVCS — Volunteer Phone (USSD Simulator)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { margin:0; font-family:system-ui,sans-serif; background:#222; display:flex; justify-content:center; padding:24px; }
+  .phone { width:320px; background:#000; border-radius:36px; padding:18px 14px; box-shadow:0 10px 40px rgba(0,0,0,.6); }
+  .screen { background:#111; border-radius:20px; min-height:230px; padding:14px; color:#0f0; font-family:monospace; font-size:13px; display:flex; flex-direction:column; }
+  .signal { color:#fff; font-size:11px; display:flex; justify-content:space-between; margin-bottom:8px; }
+  .signal .nodata { color:#f55; }
+  #flash { background:#1a1a00; border:1px solid #cc0; color:#ff6; padding:10px; border-radius:8px; margin-bottom:8px; display:none; animation:blink 1s infinite alternate; }
+  @keyframes blink { from {border-color:#cc0;} to {border-color:#ff6;} }
+  #display { flex:1; font-size:22px; color:#fff; letter-spacing:2px; min-height:34px; word-break:break-all; }
+  #reply { color:#8f8; margin-top:6px; }
+  .who { margin-bottom:8px; }
+  select { width:100%; background:#111; color:#0f0; border:1px solid #333; border-radius:8px; padding:8px; font-family:monospace; }
+  .pad { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:14px; }
+  .key { background:#1c1c1e; color:#fff; border:none; border-radius:50%; aspect-ratio:1; font-size:22px; cursor:pointer; }
+  .key:active { background:#3a3a3c; }
+  .key small { display:block; font-size:9px; color:#888; }
+  .call { grid-column:2; background:#30d158; }
+  .del { background:#333; font-size:16px; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="screen">
+    <div class="signal"><span>📶 GSM ▂▄▆█</span><span class="nodata">4G/LTE: ✕ NO DATA</span></div>
+    <div class="who">
+      <select id="vol"></select>
+    </div>
+    <div id="flash"></div>
+    <div id="display"></div>
+    <div id="reply"></div>
+  </div>
+  <div class="pad">
+    <button class="key" onclick="press('1')">1</button>
+    <button class="key" onclick="press('2')">2<small>ABC</small></button>
+    <button class="key" onclick="press('3')">3<small>DEF</small></button>
+    <button class="key" onclick="press('4')">4<small>GHI</small></button>
+    <button class="key" onclick="press('5')">5<small>JKL</small></button>
+    <button class="key" onclick="press('6')">6<small>MNO</small></button>
+    <button class="key" onclick="press('7')">7<small>PQRS</small></button>
+    <button class="key" onclick="press('8')">8<small>TUV</small></button>
+    <button class="key" onclick="press('9')">9<small>WXYZ</small></button>
+    <button class="key" onclick="press('*')">*</button>
+    <button class="key" onclick="press('0')">0<small>+</small></button>
+    <button class="key" onclick="press('#')">#</button>
+    <button class="key del" onclick="del()">⌫</button>
+    <button class="key call" onclick="send()">📞</button>
+    <button class="key del" onclick="clearAll()">C</button>
+  </div>
+</div>
+<script>
+let code = '';
+const display = document.getElementById('display');
+const replyEl = document.getElementById('reply');
+const flashEl = document.getElementById('flash');
+const volSel = document.getElementById('vol');
+
+function press(c) { code += c; display.textContent = code; }
+function del() { code = code.slice(0, -1); display.textContent = code; }
+function clearAll() { code = ''; display.textContent = ''; replyEl.textContent = ''; }
+
+async function send() {
+  if (!code) return;
+  // USSD codes route over the signaling channel to the Telco gateway (mocked)
+  const r = await fetch('/api/ussd', { method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ volunteer_id: volSel.value, code }) });
+  const data = await r.json();
+  replyEl.textContent = data.reply || data.detail || 'Error';
+  code = ''; display.textContent = '';
+}
+
+async function refresh() {
+  const s = await (await fetch('/api/state')).json();
+  const prev = volSel.value;
+  volSel.innerHTML = s.volunteers.map(v =>
+    `<option value="${v.id}">${v.name} (${v.skill}) — ${v.status}</option>`).join('');
+  if (prev) volSel.value = prev;
+  const me = s.volunteers.find(v => v.id === volSel.value);
+  if (me && me.status === 'PENDING') {
+    const m = s.missions.find(m => m.id === me.mission_id);
+    flashEl.style.display = 'block';
+    flashEl.textContent = `⚡ USSD FLASH: ${m ? m.message : 'Dispatch request'} — Reply *111*1# Accept / *111*2# Decline`;
+  } else {
+    flashEl.style.display = 'none';
+  }
+}
+refresh();
+setInterval(refresh, 2000);
+</script>
+</body>
+</html>
