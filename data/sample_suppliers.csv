@@ -1,0 +1,4 @@
+id,name,tier,country,supplies_to,category
+1,Acme Components,1,PL,,electronics
+2,Baltic Metals,2,LT,1,raw materials
+3,Vistula Logistics,1,PL,,logistics
