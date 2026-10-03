@@ -1,59 +1,70 @@
-# ChainSight — Team Alignment Questionnaire 🗳️
+# ⛓ ChainSight — Bank ⇄ Urząd Secure Data Gateway
 
-Before we write ANY code, everyone answers this. We have **~24 hours** — we can build
-ONE thing well, not five buzzwords badly. Edit this file or answer in the group chat.
+**Customer PII never leaves the bank, and no man-in-the-middle can touch the data in transit.**
 
-**Judging reminder:** Idea 30% · Relation to Defence 20% · Usability 20% · Design 20% · Completeness 10%.
-Blockchain/AI/etc. earn **zero points** by themselves — only if they visibly solve the problem.
+Banks must regularly report customer data to government offices (urząd — tax office, ZUS, courts).
+ChainSight protects that channel **before** an attack (tokenization + signed, replay-proof packets)
+and **after** one (breach yields only tokens, mass detokenization auto-revokes the key, and a
+tamper-evident hash chain provides regulatory-grade forensics).
 
----
+Full concept: [IDEA.md](IDEA.md) · Team questionnaire: [QUESTIONNAIRE.md](QUESTIONNAIRE.md)
 
-## 1. What are we building? (pick ONE)
+## Quick start
 
-- [ ] **Supplier risk graph** — map tier 1→3 suppliers, risk overlay, disruption simulation
-- [ ] **SBOM / software supply chain scanner** — dependency alerts, typosquats
-- [ ] **Critical goods flow mapper** — chokepoints for fuel/medicine/food logistics
-- [ ] **Supplier verification / sanctions screening** — procurement trust checks
-- [ ] Other (write it): ____________
+```bash
+docker compose up -d --build
+```
 
-## 2. Who is the user? (pick ONE, be specific)
+Then open the dashboard: **http://localhost:8000**
 
-- [ ] Procurement manager at a mid-size manufacturer
-- [ ] CISO / security team
-- [ ] Government / crisis-management agency
-- [ ] Other: ____________
+| Service | Port | Role |
+|---|---|---|
+| gateway | 8000 | Tokenization + packet signing, detokenization policy, web dashboard |
+| vault | 8001 | Encrypted token↔PII mapping (bank-internal only) |
+| audit | 8002 | Hash-chained append-only audit log |
+| urzad | 8003 | Mock government office — verifies signature, timestamp and nonce |
 
-## 3. What is THE one demo moment?
-*The 30 seconds that makes the jury go "wow". One sentence:*
+## Threat model & defences
 
-> ____________
+| Attack | Defence | When |
+|---|---|---|
+| MITM intercepts the channel | PII already tokenized at the bank's edge — attacker sees random tokens | before |
+| MITM tampers with a packet (e.g. swaps an IBAN) | HMAC signature over the canonical payload — urząd rejects it | before |
+| MITM replays a captured packet | Per-packet nonce + timestamp freshness — duplicate is rejected | before |
+| Urząd itself is breached | Its DB holds tokens only; the mapping never left the bank | after |
+| Stolen API key, mass detokenization | Rate limit fires → key auto-revoked | after |
+| Attacker covers their tracks | Hash-chained audit log — any tampering breaks the chain | after |
 
-## 4. Tech votes
+## Demo flow (on the dashboard)
 
-| Question | Your answer |
-|----------|-------------|
-| Frontend (React / Vue / plain) | |
-| Backend (FastAPI / Node / none) | |
-| Do we need a database at all? | |
-| AI usage — where exactly? | |
-| **Blockchain — what concrete problem does it solve here?** (if no answer → we skip it) | |
+1. **Report customer data** — PII is tokenized and the packet signed at the bank's edge; the urząd receives tokens.
+2. **Man-in-the-middle** — tamper with a signed packet or replay a captured one: the urząd rejects both.
+3. **Breach the urząd** — dump its DB: attacker gets only useless tokens.
+4. **Legitimate detokenization** — the urząd exchanges a token via the bank's policy-enforced API.
+5. **Mass exfiltration attempt** — rate limit fires, the key is auto-revoked, everything is on the audit chain.
 
-## 5. What do YOU want to own?
+## Run tests
 
-| Name | Role you want | Strongest skill |
-|------|---------------|-----------------|
-| | | |
-| | | |
-| | | |
-| | | |
-| | | |
+```bash
+docker compose up -d --build
+pip install pytest httpx
+pytest -v
+```
 
-## 6. Scope guardrails — agree or object
+Tests prove: no PII at the urząd, format-preserving idempotent tokens, MITM tamper/replay/stale-packet
+rejection, unsigned injection rejection, key auth, auto-revocation on mass detokenization,
+audit-chain integrity, and no PII in audit logs.
 
-- One core feature working end-to-end > three half-features
-- Mock data is fine, demo flow is sacred
-- UI polish matters (Design = 20%)
-- Pitch deck (max 10 slides, PDF) is someone's JOB, not an afterthought
-- Feature freeze 3h before deadline
+## Architecture
 
-**Deadline to answer: ASAP — then we lock scope and start.**
+```
+[Bank Core] → [Gateway :8000] ══signed packets══> [Urząd :8003]   (tokens only)
+                  │       │                        (verifies HMAC + ts + nonce)
+            [Vault :8001] [Audit :8002]
+            (encrypted     (hash-chained
+             mapping)       event log)
+```
+
+> ⚠️ Demo-grade: keys live in compose env vars and signing is a shared HMAC key. In production:
+> HSM/KMS for keys, mTLS + asymmetric signatures (e.g. Ed25519) between the parties, and the
+> audit chain anchored to a permissioned blockchain (e.g. Hyperledger Fabric).
